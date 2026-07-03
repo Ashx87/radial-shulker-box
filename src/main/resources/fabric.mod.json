@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "radial-shulker-box",
+	"version": "${version}",
+	"name": "Radial Shulker Box",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/radial-shulker-box/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"io.github.ashx87.radialshulkerbox.RadialShulkerBox"
+		],
+		"client": [
+			"io.github.ashx87.radialshulkerbox.client.RadialShulkerBoxClient"
+		]
+	},
+	"mixins": [
+		"radial-shulker-box.mixins.json",
+		{
+			"config": "radial-shulker-box.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.1",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
