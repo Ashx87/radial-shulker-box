@@ -4,6 +4,7 @@ import io.github.ashx87.radialshulkerbox.network.OpenShulkerBoxPayload;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import net.minecraft.resources.Identifier;
 
@@ -18,6 +19,9 @@ public class RadialShulkerBox implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		PayloadTypeRegistry.serverboundPlay().register(OpenShulkerBoxPayload.TYPE, OpenShulkerBoxPayload.STREAM_CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(OpenShulkerBoxPayload.TYPE, (payload, context) ->
+			ShulkerBoxMenuOpener.openFromInventorySlot(context.player(), payload.slot()));
 	}
 
 	public static Identifier id(String path) {
