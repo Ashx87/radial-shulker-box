@@ -2,9 +2,7 @@
 	"required": true,
 	"package": "io.github.ashx87.radialshulkerbox.client.mixin",
 	"compatibilityLevel": "JAVA_25",
-	"client": [
-		"ExampleClientMixin"
-	],
+	"client": [],
 	"injectors": {
 		"defaultRequire": 1
 	},
