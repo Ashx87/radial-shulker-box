@@ -1,5 +1,6 @@
 {
   "key.radial-shulker-box.open": "Open Shulker Box Wheel",
   "key.categories.radial-shulker-box.main": "Radial Shulker Box",
-  "screen.radial-shulker-box.hint": "Hover a shulker box to preview"
+  "screen.radial-shulker-box.hint": "Hover a shulker box to preview",
+  "message.radial-shulker-box.no_boxes": "No shulker boxes in your inventory"
 }

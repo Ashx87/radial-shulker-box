@@ -4,9 +4,13 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.ContainerUser;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
@@ -57,12 +61,30 @@ public final class ShulkerBoxMenuOpener {
 			public boolean stillValid(final Player user) {
 				return user == player && !player.isSpectator() && isStackInInventory(player, stack);
 			}
+
+			@Override
+			public void startOpen(final ContainerUser user) {
+				super.startOpen(user);
+				playSound(player, SoundEvents.SHULKER_BOX_OPEN);
+			}
+
+			@Override
+			public void stopOpen(final ContainerUser user) {
+				super.stopOpen(user);
+				playSound(player, SoundEvents.SHULKER_BOX_CLOSE);
+			}
 		};
 
 		player.openMenu(new SimpleMenuProvider(
 			(containerId, menuInventory, menuPlayer) -> new ShulkerBoxMenu(containerId, menuInventory, container),
 			Component.translatable("container.shulkerBox")
 		));
+	}
+
+	// Volume/pitch match vanilla ShulkerBoxBlockEntity's open/close sounds.
+	private static void playSound(final ServerPlayer player, final SoundEvent sound) {
+		player.level().playSound(null, player.getX(), player.getY() + 0.5, player.getZ(),
+			sound, SoundSource.BLOCKS, 0.5f, player.level().getRandom().nextFloat() * 0.1f + 0.9f);
 	}
 
 	private static void writeContents(final ItemStack stack, final SimpleContainer container) {
