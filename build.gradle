@@ -32,6 +32,17 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Unit tests cover pure logic that needs no Minecraft bootstrap, e.g.
+	// RadialMenuMath in the client source set — hence the output dependency.
+	testImplementation platform("org.junit:junit-bom:${project.junit_version}")
+	testImplementation "org.junit.jupiter:junit-jupiter"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+	testImplementation sourceSets.client.output
+}
+
+test {
+	useJUnitPlatform()
 }
 
 processResources {
