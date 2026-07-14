@@ -42,6 +42,12 @@ public class RadialShulkerBoxClient implements ClientModInitializer {
 			List<ShulkerBoxScanner.Entry> entries = ShulkerBoxScanner.scan(client.player);
 			if (!entries.isEmpty()) {
 				client.setScreen(new RadialMenuScreen(entries));
+				// Minecraft#setScreen() unconditionally calls KeyMapping.releaseAll(), which zeroes
+				// openRadialMenuKey's isDown state even though G is still physically held. Without this,
+				// the very next tick sees isDown() == false and closes the screen again, causing a
+				// rapid open/close loop (visible as flicker) until the next GLFW key-repeat event
+				// flips isDown back to true and reopens it. Restore the true state immediately.
+				openRadialMenuKey.setDown(true);
 			}
 		}
 	}
