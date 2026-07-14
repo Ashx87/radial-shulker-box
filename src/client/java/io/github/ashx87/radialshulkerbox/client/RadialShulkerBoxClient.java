@@ -17,6 +17,21 @@ import java.util.List;
 
 public class RadialShulkerBoxClient implements ClientModInitializer {
 	private static KeyMapping openRadialMenuKey;
+	private static boolean suppressReopen = false;
+
+	/**
+	 * Called when the radial menu is dismissed via ESC. Suppresses reopening until the
+	 * key is genuinely released — otherwise the very next tick sees the key still held
+	 * with no screen open and immediately reopens the menu, making ESC a no-op.
+	 */
+	static void onMenuDismissed() {
+		suppressReopen = true;
+		// setScreen(null) inside Screen#onClose zeroed isDown via KeyMapping.releaseAll()
+		// even though the key is physically held (same quirk as the open path below).
+		// Restore it so suppressReopen only clears on a real key-release event, not on
+		// the artificial gap before the next GLFW key-repeat.
+		openRadialMenuKey.setDown(true);
+	}
 
 	@Override
 	public void onInitializeClient() {
@@ -29,6 +44,10 @@ public class RadialShulkerBoxClient implements ClientModInitializer {
 	}
 
 	private static void onEndTick(final Minecraft client) {
+		if (!openRadialMenuKey.isDown()) {
+			suppressReopen = false;
+		}
+
 		if (client.screen instanceof RadialMenuScreen radialMenu) {
 			if (!openRadialMenuKey.isDown()) {
 				int hovered = radialMenu.hoveredIndex();
@@ -38,7 +57,8 @@ public class RadialShulkerBoxClient implements ClientModInitializer {
 					ClientPlayNetworking.send(new OpenShulkerBoxPayload(entries.get(hovered).slot()));
 				}
 			}
-		} else if (client.screen == null && openRadialMenuKey.isDown() && client.player != null) {
+		} else if (client.screen == null && openRadialMenuKey.isDown() && !suppressReopen
+				&& client.player != null && !client.player.isSpectator()) {
 			List<ShulkerBoxScanner.Entry> entries = ShulkerBoxScanner.scan(client.player);
 			if (!entries.isEmpty()) {
 				client.setScreen(new RadialMenuScreen(entries));

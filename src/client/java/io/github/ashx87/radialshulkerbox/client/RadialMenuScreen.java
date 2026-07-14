@@ -54,6 +54,14 @@ public class RadialMenuScreen extends Screen {
 	}
 
 	@Override
+	public void onClose() {
+		// Only ESC (Screen#keyPressed) routes through here; the normal key-release
+		// close path in RadialShulkerBoxClient calls setScreen(null) directly.
+		super.onClose();
+		RadialShulkerBoxClient.onMenuDismissed();
+	}
+
+	@Override
 	public boolean isPauseScreen() {
 		return false;
 	}
