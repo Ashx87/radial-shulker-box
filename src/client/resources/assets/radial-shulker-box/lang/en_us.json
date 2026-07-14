@@ -1,4 +1,5 @@
 {
   "key.radial-shulker-box.open": "Open Shulker Box Wheel",
-  "key.categories.radial-shulker-box.main": "Radial Shulker Box"
+  "key.categories.radial-shulker-box.main": "Radial Shulker Box",
+  "screen.radial-shulker-box.hint": "Hover a shulker box to preview"
 }
