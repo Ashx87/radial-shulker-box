@@ -10,6 +10,9 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -33,6 +36,36 @@ public class RadialShulkerBoxClient implements ClientModInitializer {
 		openRadialMenuKey.setDown(true);
 	}
 
+	static boolean matchesOpenKey(final KeyEvent event) {
+		return openRadialMenuKey.matches(event);
+	}
+
+	static boolean matchesOpenMouse(final MouseButtonEvent event) {
+		return openRadialMenuKey.matchesMouse(event);
+	}
+
+	/**
+	 * Closes the radial menu and opens the hovered shulker box, if any. Called from
+	 * the screen's release-event handlers — the authoritative path, since KeyMapping
+	 * down-state is NOT updated for mouse buttons while a screen is open (see
+	 * MouseHandler: KeyMapping.set only runs when screen == null, unlike keyboard
+	 * releases which always go through) — and from the tick fallback below.
+	 */
+	static void closeAndSelect(final Minecraft client, final RadialMenuScreen radialMenu) {
+		int hovered = radialMenu.hoveredIndex();
+		List<ShulkerBoxScanner.Entry> entries = radialMenu.entries();
+		client.setScreen(null);
+		// Reaching here means the hotkey was just released, but neither vanilla path
+		// records that: setScreen(null) does not call KeyMapping.releaseAll (only
+		// opening a screen does), and MouseHandler returns early once the screen
+		// consumes the release, skipping its KeyMapping.set(false). Without this the
+		// still-true down state reopens the menu on the very next tick.
+		openRadialMenuKey.setDown(false);
+		if (hovered >= 0 && hovered < entries.size()) {
+			ClientPlayNetworking.send(new OpenShulkerBoxPayload(entries.get(hovered).slot()));
+		}
+	}
+
 	@Override
 	public void onInitializeClient() {
 		KeyMapping.Category category = KeyMapping.Category.register(RadialShulkerBox.id("main"));
@@ -49,18 +82,21 @@ public class RadialShulkerBoxClient implements ClientModInitializer {
 		}
 
 		if (client.screen instanceof RadialMenuScreen radialMenu) {
+			// Fallback for releases the screen never sees (e.g. focus loss zeroing the
+			// key state); the usual close path is the screen's release-event handlers.
 			if (!openRadialMenuKey.isDown()) {
-				int hovered = radialMenu.hoveredIndex();
-				List<ShulkerBoxScanner.Entry> entries = radialMenu.entries();
-				client.setScreen(null);
-				if (hovered >= 0 && hovered < entries.size()) {
-					ClientPlayNetworking.send(new OpenShulkerBoxPayload(entries.get(hovered).slot()));
-				}
+				closeAndSelect(client, radialMenu);
 			}
 		} else if (client.screen == null && openRadialMenuKey.isDown() && !suppressReopen
 				&& client.player != null && !client.player.isSpectator()) {
 			List<ShulkerBoxScanner.Entry> entries = ShulkerBoxScanner.scan(client.player);
-			if (!entries.isEmpty()) {
+			if (entries.isEmpty()) {
+				client.player.sendOverlayMessage(
+					Component.translatable("message.radial-shulker-box.no_boxes"));
+				// Reuse the suppress flag so the action bar message fires once per key
+				// press instead of every tick while the key stays held.
+				suppressReopen = true;
+			} else {
 				client.setScreen(new RadialMenuScreen(entries));
 				// Minecraft#setScreen() unconditionally calls KeyMapping.releaseAll(), which zeroes
 				// openRadialMenuKey's isDown state even though G is still physically held. Without this,
